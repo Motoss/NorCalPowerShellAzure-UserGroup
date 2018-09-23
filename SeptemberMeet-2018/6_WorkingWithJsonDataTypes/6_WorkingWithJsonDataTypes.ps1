@@ -25,7 +25,7 @@ $Reverse_TomACLJSON.Access
 
 #RestAPI call example
 
-$Url = "https://raw.githubusercontent.com/Motoss/NorCalPowerShellAzure-UserGroup/master/JSONExampleData"
+$Url = "https://raw.githubusercontent.com/Motoss/NorCalPowerShellAzure-UserGroup/master/SeptemberMeet-2018/6_WorkingWithJsonDataTypes/JSONExampleData"
 $Result = Invoke-WebRequest -Uri $Url
 
 $Conversion = $Result | ConvertFrom-Json
