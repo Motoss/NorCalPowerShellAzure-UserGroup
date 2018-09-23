@@ -1,4 +1,18 @@
-﻿#region Basic Invoke-Command example
+﻿##################################################################################
+
+<# 
+    Code Created for: 
+            Northern California PowerShell and Azure User Group
+            Site: NorCalPowerShellAzure.org (Coming Soon)
+            MeetupGrp: https://www.meetup.com/NorCal-PowerShell-Azure-User-Group/
+    
+  Script Updated on: 9/23/2018                                                 
+      Created By: Thomas Peffers | Contact: Tom@HyperSystemsTech.com           
+#>
+
+##################################################################################
+
+#region Basic Invoke-Command example
 
 #region Script Context
     <#

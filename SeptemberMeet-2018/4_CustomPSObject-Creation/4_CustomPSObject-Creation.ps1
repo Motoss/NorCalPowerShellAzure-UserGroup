@@ -1,4 +1,18 @@
-﻿#region Script Context/Intro  
+﻿##################################################################################
+
+<# 
+    Code Created for: 
+            Northern California PowerShell and Azure User Group
+            Site: NorCalPowerShellAzure.org (Coming Soon)
+            MeetupGrp: https://www.meetup.com/NorCal-PowerShell-Azure-User-Group/
+    
+  Script Updated on: 9/23/2018                                                 
+      Created By: Thomas Peffers | Contact: Tom@HyperSystemsTech.com           
+#>
+
+##################################################################################
+
+#region Script Context/Intro  
 <#
     Custom PSObject Creation. PS Objects are great for binging data and behaviors to objects. 
 

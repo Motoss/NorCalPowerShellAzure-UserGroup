@@ -1,4 +1,18 @@
-﻿#region Basic CodeWrittingCode example
+﻿##################################################################################
+
+<# 
+    Code Created for: 
+            Northern California PowerShell and Azure User Group
+            Site: NorCalPowerShellAzure.org (Coming Soon)
+            MeetupGrp: https://www.meetup.com/NorCal-PowerShell-Azure-User-Group/
+    
+  Script Updated on: 9/23/2018                                                 
+      Created By: Thomas Peffers | Contact: Tom@HyperSystemsTech.com           
+#>
+
+##################################################################################
+
+#region Basic CodeWrittingCode example
 
 #region Script Context
     <#
@@ -20,7 +34,7 @@
 #region LoadVariables
 
 #Base directory for working with script input resources and script output location
-$FileBaseLoc = 'C:\Users\Tom\Dropbox\Sookasa\Hyper-Systems\Pwsh & Azure User Grp\CodeWrittingCode'
+$FileBaseLoc = 'C:\Users\Tom\Documents\GitHub\NorCalPowerShellAzure-UserGroup\SeptemberMeet-2018\3_CodeWrittingCode'
 
 #Arbitrary variable that is not essential to the script overall. Mostly here to show how variables can be added/used to generate desired results. 
 $RuleBaseGrp = '7'
@@ -35,7 +49,7 @@ $list = Get-Content "$FileBaseLoc\ExchangeOnline 7.txt"
 
 
 #region DemoCleanup
-
+$RuleNameBase = "o365 Exchange Online"
 $CleanupTest = Test-Path "$($FileBaseLoc)\output\$($RuleNameBase).txt"
 
 If($CleanupTest -eq $true)
@@ -54,7 +68,6 @@ Foreach($line in $list)
 {
 
     
-    $RuleNameBase = "o365 Exchange Online"
     $CurrentRuleName = $RuleNameBase + "$($RuleBaseGrp)-$($x)"
 
     $Template = @"
@@ -87,7 +100,7 @@ start notepad -ArgumentList "$($FileBaseLoc)\output\$($RuleNameBase).txt"
 
 
 #region LoadVariables
-$FileBaseLoc = 'C:\Users\Tom\Dropbox\Sookasa\Hyper-Systems\Pwsh & Azure User Grp\CodeWrittingCode\Advanced'
+$FileBaseLoc = 'C:\Users\Tom\Documents\GitHub\NorCalPowerShellAzure-UserGroup\SeptemberMeet-2018\3_CodeWrittingCode\Advanced'
 
 $OutPutTemplate = Get-Content "$($FileBaseLoc)\Brocade ICX 7xxx - Tom - AE1.txt"
 $DataSet = Import-Csv "$($FileBaseLoc)\Dataset-AE1.csv"
