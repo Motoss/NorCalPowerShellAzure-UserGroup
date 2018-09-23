@@ -1,0 +1,197 @@
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Variables in template>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<v> = 1rst octet for management IP
+<w> = 2nd octet for management IP
+<x> = site management address
+<y> = 4th octet portion of ip address for the IDF
+<z> = Cidr notation for subnet E: 16
+<NumInStack> = The number of units in the stack. Ex: (5 in stack)
+<RootSiteName> = Root site name of IDF. Ex: (SchoolName: Destiny)
+<location> = idf at root site. Ex: (LocationName: Mars) -> Given above example switch name would be: Destiny-Mars
+<Aruba> = Wireless AP port numbers
+<StackSecondary> = Backup for stack primary. 
+<DefaultUserVlan> = Default vlan for switch stack/idf. 
+
+<VLAN-1> = Management Vlan Name
+<VLAN-2> = Name for vlan
+<VLAN-3> = Name for vlan
+<VLAN-4> = Name for vlan
+<VLAN-5> = Name for vlan
+<VLAN-6> = Name for vlan
+<VLAN-7> = Name for vlan
+<VLAN-8> = Name for vlan
+<VLAN-9> = Name for vlan
+<VLAN-10> = Name for vlan
+
+<Vlan-1-Num> = Number of Vlan to vlan name (Management)
+<Vlan-2-Num> = Number of Vlan to vlan name
+<Vlan-3-Num> = Number of Vlan to vlan name
+<Vlan-4-Num> = Number of Vlan to vlan name
+<Vlan-5-Num> = Number of Vlan to vlan name
+<Vlan-6-Num> = Number of Vlan to vlan name
+<Vlan-7-Num> = Number of Vlan to vlan name
+<Vlan-8-Num> = Number of Vlan to vlan name
+<Vlan-9-Num> = Number of Vlan to vlan name
+<Vlan-10-Num> = Number of Vlan to vlan name
+ 
+<VE-VLAN-1> = VE Management Vlan Name 
+<VE-VLAN-2> = Name for VE interface
+<VE-VLAN-3> = Name for VE interface
+<VE-VLAN-4> = Name for VE interface
+<VE-VLAN-5> = Name for VE interface
+<VE-VLAN-6> = Name for VE interface
+<VE-VLAN-7> = Name for VE interface
+<VE-VLAN-8> = Name for VE interface
+<VE-VLAN-9> = Name for VE interface
+<VE-VLAN-10> = Name for VE interface
+
+<VE-Vlan-1-Num> = Number of VE interface to VE name (Management)
+<VE-Vlan-2-Num> = Number of VE interface to VE name
+<VE-Vlan-3-Num> = Number of VE interface to VE name
+<VE-Vlan-4-Num> = Number of VE interface to VE name
+<VE-Vlan-5-Num> = Number of VE interface to VE name
+<VE-Vlan-6-Num> = Number of VE interface to VE name
+<VE-Vlan-7-Num> = Number of VE interface to VE name
+<VE-Vlan-8-Num> = Number of VE interface to VE name
+<VE-Vlan-9-Num> = Number of VE interface to VE name
+<VE-Vlan-10-Num> = Number of VE interface to VE name
+
+
+<<<Notes: Some logic needs to be applied in order for this to be fully automation ready. Specifically with sensing how many ports are being used for uplink and Aruba/wireless AP.
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+username tom password SmileyFace1
+
+
+enable super-user-password SmileyFace2
+
+
+vlan 1 name DEFAULT-VLAN by port
+ router-interface ve 1
+ spanning-tree 802-1w
+ spanning-tree 802-1w priority 16384
+!
+
+vlan 3032 name AP_WLAN_Transport by port
+tagged ethe 1/2/1 ethe 1/2/3 ethe <StackSecondary>/2/1 ethe <StackSecondary>/2/3
+ spanning-tree 802-1w
+ spanning-tree 802-1w priority 16384
+
+exit
+
+ip route 0.0.0.0/0 10.69.0.1
+
+
+system-max spanning-tree 128
+system-max vlan 128
+
+
+optical-monitor
+
+aaa authentication enable default enable
+aaa authentication login default local
+aaa authentication web-server default local
+
+
+
+no telnet server
+cdp run
+fdp run
+lldp run
+
+
+snmp-server host 1.1.1.1
+snmp-server host 1.1.1.2
+snmp-server location <RootSiteName>-<location>
+
+clock summer-time
+clock timezone us Pacific
+ntp
+ peer 8.8.8.8
+ peer 1.1.1.1
+exit
+
+port security
+ maximum 1
+ Age 5 absolute
+
+exit
+
+
+
+interface ethernet 1/2/1
+ port-name Uplink
+ trust dscp
+ broadcast limit 16384
+ no spanning
+
+interface ethernet 1/2/3
+ port-name Uplink
+ trust dscp
+ broadcast limit 16384
+ no spanning
+ 
+interface ethernet <StackSecondary>/2/1
+ port-name Uplink
+ trust dscp
+ broadcast limit 16384
+ no spanning
+ 
+interface ethernet <StackSecondary>/2/3
+ port-name Uplink
+ trust dscp
+ broadcast limit 16384
+ no spanning
+exit
+hostname <RootSiteName>-<location>
+
+
+interface management 1
+ ip address 10.69.<x>.<y>/16
+
+
+
+lag "A1_<location>_Stack-to-A1-CORE" dynamic id 1
+ ports ethernet 1/2/1 ethernet 1/2/3 ethernet <StackSecondary>/2/1 ethernet <StackSecondary>/2/3
+ primary-port 1/2/1
+ deploy
+ port-name "Uplink to A1-CORE0" ethernet 1/2/1
+ port-name "Uplink to A1-CORE1" ethernet 1/2/3
+ port-name "Uplink to A1-CORE0" ethernet <StackSecondary>/2/1
+ port-name "Uplink to A1-CORE1" ethernet <StackSecondary>/2/3
+
+exit
+
+enable acl-per-port-per-vlan
+
+
+write memory
+
+
+exit
+
+<<< Reload >>
+
+
+no int ve 3141
+no vlan 3141
+
+
+ip route 0.0.0.0/0 10.69.0.1
+
+vlan 1111 name TOM_Mgmt by port
+tagged ethe 1/2/1 ethe 1/2/3 ethe <StackSecondary>/2/1 ethe <StackSecondary>/2/3 
+ router-interface ve 1111
+ spanning-tree 802-1w
+ spanning-tree 802-1w priority 16384
+exit
+
+interface ve 1111
+ ip address 10.69.<x>.<y>/24
+exit
+ 
+interface loopback 1
+ ip address 10.60.1.<y>/32
+exit
+ 
+ 
+
