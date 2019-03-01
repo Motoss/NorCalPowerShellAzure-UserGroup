@@ -1,0 +1,289 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "network-prod-vNetName": {
+      "type": "string",
+      "defaultValue": "hybrid-prod-vnet"
+    },
+    "network-prod-Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16"
+    },
+    "network-prod-Subnet1Name": {
+      "type": "string",
+      "defaultValue": "Web_Subnet"
+    },
+    "network-prod-Subnet1Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24"
+    },
+    "network-prod-Subnet2Name": {
+      "type": "string",
+      "defaultValue": "Server_Subnet"
+    },
+    "network-prod-Subnet2Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24"
+    },
+    "network-prod-GatewaySubnet": {
+      "type": "string",
+      "defaultValue": "GatewaySubnet"
+    },
+    "network-prod-GatewaySubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/27"
+    },
+    "DC-VM-PIP-Name": {
+      "type": "string",
+      "defaultValue": "DC-VM-PIP"
+    },
+    "DC-VM-PIP-DNS-Label": {
+      "type": "string",
+      "defaultValue": "djhflajc849pip"
+    },
+
+    "DC-VM-Admin-UserName": {
+      "type": "string",
+      "defaultValue": "admintom"
+    },
+    "DC-VM-Admin-Password": {
+      "type": "securestring",
+      "defaultValue": "DemoP@ssw0rd!"
+    },
+
+    "DC-VM-Name": {
+      "type": "string",
+      "defaultValue": "VM1"
+    },
+
+    "DC-VM-DATADisk-CreationOption": {
+      "type": "string",
+      "defaultValue": "empty"
+
+    },
+    "DC-VM-DATADisk-AccountType": {
+      "type": "array",
+      "defaultValue": [
+        "Standard_LRS",
+        "Standard_LRS"
+      ]
+    },
+    "DC-VM-DATADisk-SizeGB": {
+      "type": "array",
+      "defaultValue": [
+        "100",
+        "100"
+      ]
+    },
+    "DC-VM-Size": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2"
+    },
+
+    "DC-VM-ImageRef-Pub": {
+      "type": "string",
+      "defaultValue": "MicrosoftWindowsServer"
+    },
+    "DC-VM-ImageRef-ImgOffer": {
+      "type": "string",
+      "defaultValue": "WindowsServer"
+    },
+    "DC-VM-ImageRef-ImgSKU": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter"
+    }
+  },
+  "variables": {
+    "DC-VM-Nic-Name": "[concat(parameters('DC-VM-Name'),'nic')]",
+    "DC-VM-OSDisk-Name": "[concat(parameters('DC-VM-Name'),'-osdisk')]",
+    "DC-VM-DATADisk-Name": [
+      "[concat(parameters('DC-VM-Name'),'-datadisk','-0')]",
+      "[concat(parameters('DC-VM-Name'),'-datadisk','-1')]"
+    ],
+    "DC-VM-Disk-Count": "[length(variables('DC-VM-DATADisk-Name'))]",
+    "MainVNet_ID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('network-prod-vNetName'))]"
+
+  },
+  "resources": [
+    {
+      "name": "[parameters('network-prod-vNetName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-10-01",
+      "dependsOn": [],
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "Hybrid-Hub-Network"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('network-prod-Prefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('network-prod-Subnet1Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('network-prod-Subnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('network-prod-Subnet2Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('network-prod-Subnet2Prefix')]"
+            }
+          },
+          {
+            "name": "[parameters('network-prod-GatewaySubnet')]",
+            "properties": {
+              "addressPrefix": "[parameters('network-prod-GatewaySubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('DC-VM-DATADisk-Name')[copyIndex()]]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "ManagementType": "Storage",
+        "Environment": "Production",
+        "WorkLoad": "Hybrid-Hub-Network"
+      },
+      "copy": {
+        "name": "diskCopy",
+        "count": "[variables('DC-VM-Disk-Count')]"
+      },
+      "properties": {
+        "creationData": {
+          "createOption": "[parameters('DC-VM-DATADisk-CreationOption')]"
+        },
+        "accountType": "[parameters('DC-VM-DATADisk-AccountType')[copyIndex()]]",
+        "diskSizeGB": "[parameters('DC-VM-DATADisk-SizeGB')[copyIndex()]]"
+      }
+    },
+    {
+      "name": "[variables('DC-VM-Nic-Name')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[variables('MainVNet_ID')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('DC-VM-PIP-Name'))]"
+      ],
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "Hybrid-Hub-Network"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(variables('MainVNet_ID'),'/subnets/',parameters('network-prod-Subnet2Name'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('DC-VM-PIP-Name'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('DC-VM-Name')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-04-30-preview",
+      "dependsOn": [
+        "diskCopy",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('DC-VM-Nic-Name'))]"
+      ],
+      "tags": {
+        "ManagementType": "Server",
+        "Environment": "Production",
+        "WorkLoad": "Hybrid-Hub-Network"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('DC-VM-Size')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('DC-VM-Name')]",
+          "adminUsername": "[parameters('DC-VM-Admin-UserName')]",
+          "adminPassword": "[parameters('DC-VM-Admin-Password')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('DC-VM-ImageRef-Pub')]",
+            "offer": "[parameters('DC-VM-ImageRef-ImgOffer')]",
+            "sku": "[parameters('DC-VM-ImageRef-ImgSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('DC-VM-OSDisk-Name')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "[variables('DC-VM-DATADisk-Name')[0]]",
+              "lun": 0,
+              "caching": "None",
+              "createOption": "Attach",
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks',variables('DC-VM-DATADisk-Name')[0])]"
+              }
+            },
+            {
+              "name": "[variables('DC-VM-DATADisk-Name')[1]]",
+              "lun": 1,
+              "caching": "None",
+              "createOption": "Attach",
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks',variables('DC-VM-DATADisk-Name')[1])]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('DC-VM-Nic-Name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+
+      ]
+    },
+    {
+      "name": "[parameters('DC-VM-PIP-Name')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "West US 2",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "Hybrid-Hub-Network"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('DC-VM-PIP-DNS-Label')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
