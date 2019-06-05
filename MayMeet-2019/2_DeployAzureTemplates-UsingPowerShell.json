@@ -1,0 +1,380 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+
+    "NSG_WEB_Name": {
+      "type": "string",
+      "defaultValue": "az_nsg_web",
+      "metadata": {
+        "description": "This is the name of the nsg assigned to the web tier subnet"
+      }
+    },
+    "NSG_APPS_Name": {
+      "type": "string",
+      "defaultValue": "az_nsg_apps",
+      "metadata": {
+        "description": "This is the name of the nsg assigned to the apps subnet"
+      }
+    },
+    "NSG_DATA_Name": {
+      "type": "string",
+      "defaultValue": "az_nsg_data",
+      "metadata": {
+        "description": "This is the name of the nsg assigned to the data tier subnet"
+      }
+    },
+    "NSG_AD_Name": {
+      "type": "string",
+      "defaultValue": "az_nsg_ad",
+      "metadata": {
+        "description": "This is the name of the nsg assigned to the AD subnet"
+      }
+    },
+    "NSG_MGMT_Name": {
+      "type": "string",
+      "defaultValue": "az_nsg_mgmt",
+      "metadata": {
+        "description": "This is the name of the nsg assigned to the management subnet"
+      }
+    },
+
+    "MainVNet_Name": {
+      "type": "string",
+      "defaultValue": "az_vnet",
+      "metadata": {
+        "description": "This is the name of your VNET"
+      }
+    },
+    "MainVNetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/21"
+    },
+    "MainVNetSubnet1Name": {
+      "type": "string",
+      "defaultValue": "az_subnet_web",
+      "metadata": {
+        "description": "This is the name of your web tier subnet"
+      }
+    },
+    "MainVNetSubnet1Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24",
+      "metadata": {
+        "description": "This is the CIDR prefix for your web tier subnet"
+      }
+    },
+    "MainVNetSubnet2Name": {
+      "type": "string",
+      "defaultValue": "az_subnet_apps",
+      "metadata": {
+        "description": "This is the name of your apps subnet"
+      }
+    },
+    "MainVNetSubnet2Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24",
+      "metadata": {
+        "description": "This is the CIDR prefix for your apps subnet"
+      }
+    },
+    "MainVNetSubnet3Name": {
+      "type": "string",
+      "defaultValue": "az_subnet_data",
+      "metadata": {
+        "description": "This is the name of your data tier subnet"
+      }
+    },
+    "MainVNetSubnet3Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.3.0/24",
+      "metadata": {
+        "description": "This is the CIDR prefix for your data tier subnet"
+      }
+    },
+    "MainVNetSubnet4Name": {
+      "type": "string",
+      "defaultValue": "az_subnet_ad",
+      "metadata": {
+        "description": "This is the name of your AD subnet"
+      }
+    },
+    "MainVNetSubnet4Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.4.0/27",
+      "metadata": {
+        "description": "This is the CIDR prefix for your AD subnet"
+      }
+    },
+    "MainVNetSubnet5Name": {
+      "type": "string",
+      "defaultValue": "az_subnet_mgmt",
+      "metadata": {
+        "description": "This is the name of your management subnet"
+      }
+    },
+    "MainVNetSubnet5Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.4.32/27",
+      "metadata": {
+        "description": "This is the CIDR prefix for your management subnet"
+      }
+    },
+    "MainVNetSubnet6Name": {
+      "type": "string",
+      "defaultValue": "GatewaySubnet",
+      "metadata": {
+        "description": "This is the name of your management subnet"
+      }
+    },
+    "MainVNetSubnet6Prefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/27",
+      "metadata": {
+        "description": "This is the CIDR prefix for your gateway subnet"
+      }
+    }
+
+  },
+  "variables": {
+    "MainVNet_ID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('MainVNet_Name'))]",
+    "NSG_WEB_ID": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('NSG_WEB_Name'))]",
+    "NSG_APPS_ID": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('NSG_APPS_Name'))]",
+    "NSG_DATA_ID": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('NSG_DATA_Name'))]",
+    "NSG_AD_ID": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('NSG_AD_Name'))]",
+    "NSG_MGMT_ID": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('NSG_MGMT_Name'))]"
+
+  },
+  "resources": [
+    {
+      "name": "[parameters('MainVNet_Name')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "Azure"
+      },
+      "dependsOn": [
+        "[variables('NSG_WEB_ID')]",
+        "[variables('NSG_APPS_ID')]",
+        "[variables('NSG_DATA_ID')]",
+        "[variables('NSG_AD_ID')]",
+        "[variables('NSG_MGMT_ID')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('MainVNetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('MainVNetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet1Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[variables('NSG_WEB_ID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('MainVNetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet2Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[variables('NSG_APPS_ID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('MainVNetSubnet3Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet3Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[variables('NSG_DATA_ID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('MainVNetSubnet4Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet4Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[variables('NSG_AD_ID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('MainVNetSubnet5Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet5Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[variables('NSG_MGMT_ID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('MainVNetSubnet6Name')]",
+            "properties": {
+              "addressPrefix": "[parameters('MainVNetSubnet6Prefix')]"
+              
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-03-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('NSG_WEB_Name')]",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "ADFS"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Internet_deny_All",
+            "properties": {
+              "description": "Deny all from internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[parameters('MainVNetSubnet1Prefix')]",
+              "access": "Deny",
+              "priority": 250,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-03-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('NSG_APPS_Name')]",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "ADFS"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Internet_deny_All",
+            "properties": {
+              "description": "Deny all from internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[parameters('MainVNetSubnet2Prefix')]",
+              "access": "Deny",
+              "priority": 250,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-03-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('NSG_DATA_Name')]",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "ADFS"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Internet_deny_All",
+            "properties": {
+              "description": "Deny all from internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[parameters('MainVNetSubnet3Prefix')]",
+              "access": "Deny",
+              "priority": 250,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('NSG_AD_Name')]",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "ADFS"
+      },
+      "properties": {
+        "securityRules": [
+         {
+            "name": "Internet_deny_All",
+            "properties": {
+              "description": "Deny all from internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[parameters('MainVNetSubnet4Prefix')]",
+              "access": "Deny",
+              "priority": 250,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('NSG_MGMT_Name')]",
+      "tags": {
+        "ManagementType": "Network",
+        "Environment": "Production",
+        "WorkLoad": "ADFS"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Internet_deny_All",
+            "properties": {
+              "description": "Deny all from internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[parameters('MainVNetSubnet5Prefix')]",
+              "access": "Deny",
+              "priority": 250,
+              "direction": "Inbound"
+            }
+          }
+          
+        ]
+      }
+    }
+
+
+
+
+  ],
+  "outputs": {}
+}
